@@ -47,6 +47,7 @@ require 'god/conditions/lambda'
 require 'god/conditions/degrading_lambda'
 require 'god/conditions/flapping'
 require 'god/conditions/http_response_code'
+require 'god/conditions/http_response_body'
 require 'god/conditions/disk_usage'
 require 'god/conditions/complex'
 
