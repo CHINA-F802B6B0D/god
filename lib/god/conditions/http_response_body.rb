@@ -6,16 +6,16 @@ module God
     # Condition Symbol :http_response_code
     # Type: Poll
     # 
-    # Trigger based on the response from an HTTP request.
+    # Trigger based on the body of an HTTP response.
     #
     # Paramaters
     #   Required
     #     +host+ is the hostname to connect [required]
     #     --one of code_is or code_is_not--
-    #     +code_is+ trigger if the response code IS one of these
-    #               e.g. 500 or '500' or [404, 500] or %w{404 500}
-    #     +code_is_not+ trigger if the response code IS NOT one of these
-    #                   e.g. 200 or '200' or [200, 302] or %w{200 302}
+    #     +code_is+ trigger if the response code matches this string
+    #               e.g. '500'
+    #     +code_is_not+ trigger if the response code does not match this string
+    #                   e.g. '200'
     #  Optional
     #     +port+ is the port to connect (default 80)
     #     +path+ is the path to connect (default '/')
@@ -82,9 +82,6 @@ module God
       end
       
       def prepare
-        self.code_is = Array(self.code_is).map { |x| x.to_i } if self.code_is
-        self.code_is_not = Array(self.code_is_not).map { |x| x.to_i } if self.code_is_not
-        
         if self.times.kind_of?(Integer)
           self.times = [self.times, self.times]
         end
@@ -111,14 +108,13 @@ module God
         
         Net::HTTP.start(self.host, self.port) do |http|
           http.read_timeout = self.timeout
-          response = http.get(self.path)[8,11]
+          response = http.get(self.path)
         end
         
-        #Line below used to be response.code.to_i
-        actual_response_code = response.to_i
-        if self.code_is && self.code_is.include?(actual_response_code)
+        actual_response_code = response.body[5,10].to_s
+        if self.code_is && actual_response_code.include?(self.code_is)
           pass(actual_response_code)
-        elsif self.code_is_not && !self.code_is_not.include?(actual_response_code)
+        elsif self.code_is_not && !actual_response_code.include?(self.code_is_not)
           pass(actual_response_code)
         else
           fail(actual_response_code)
